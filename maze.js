@@ -15,6 +15,7 @@ var skybox_loc;
 // Fog Shader
 var fogDensity_loc;
 var fogColor_loc;
+var fogDist_loc;
 
 // Menu Elements
 var menu;
@@ -155,9 +156,19 @@ function init() {
     // Setup Fogvariablen
     fogDensity_loc = gl.getUniformLocation(shader_program_0,"uFogDensity");
     fogColor_loc = gl.getUniformLocation(shader_program_0, "fogColor");
-    var fogColor = [0.8, 0.9, 1, 1];
-    gl.uniform1f(fogDensity_loc, .5);
-    gl.uniform3fv(fogColor_loc,fogColor);
+    fogDist_loc = gl.getUniformLocation(shader_program_0,"ufogDist");
+
+    var fogColor = [1.0, 1.0, 1.0, 1.0];
+    var fogDensity = 0.7; // Je höher desto dunkler wird die Szene
+    var fogStartDistance = 10.0;
+    var fogEndDistance = 120.0;
+
+    var fogDist = new Float32Array([fogStartDistance, fogEndDistance]);
+    gl.uniform1f(fogDensity_loc, fogDensity);
+    gl.uniform4fv(fogColor_loc, fogColor);
+    gl.uniform2fv(fogDist_loc, fogDist);
+    
+    // TODO: Schatten (?) 
     
 
     // Setup Wände

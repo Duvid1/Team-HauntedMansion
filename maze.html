@@ -122,12 +122,17 @@
     varying vec2 vtextcoord;
     varying vec3 vnormal;
     varying vec3 vsurfaceToView;
+
+    uniform mat4 u_worldView;
+    varying float v_fogDepth;
+
+
     void main(){
     gl_Position = umatrix * aposition;
     vtextcoord = atextcoord;
     vnormal = anormal;
     vsurfaceToView = camera_pos - aposition.xyz;
-
+    v_fogDepth = -(u_worldView*aposition).z;
     }
 
     </script>
@@ -144,9 +149,12 @@
         uniform float ushine;
 
         // Fog parameter
-        uniform float uFogDensity;
-        uniform vec3 fogColor; 
-        uniform vec3 ufogDist;
+        uniform vec4 u_fogColor;
+        uniform float u_fogNear;
+        uniform float u_fogFar;
+        uniform float u_fogAmount;
+        uniform float u_fogDensity;
+
 
         void main(){
             vec3 normal = normalize(vnormal);
@@ -160,61 +168,20 @@
             vec3 halfVector = normalize(ureverse_light_dir + surfaceToView);
             float specular_light = pow(max(dot(normal, halfVector),0.0),ushine);
             gl_FragColor.rgb+= uspecular*specular_light;
-        }
-        
-        float fogFactor = smoothstep(0.0, 1.0, 1.0) - exp(-uFogDensity * length(vsurfaceToView));
-        gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, fogFactor);
-        
-        float fogStart = ufogDist.x;
-        float fogEnd = ufogDist.y;
-        float fogFactorDist = (length(vsurfaceToView - ureverse_light_dir) - fogStart) / (fogEnd - fogStart);
-        fogFactorDist = clamp(fogFactorDist, 0.0, 1.0);
-        
-        float fogWeight = 0.01; 
-        gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, mix(fogFactor, fogFactorDist, fogWeight));
-        
+            
+            // Fog Settings
 
+            float depth = length(vsurfaceToView);
+            float depthInRange = clamp((depth - u_fogNear) / (u_fogFar - u_fogNear), 0.0, 1.0);
+            #define LOG2 1.442695
+
+            float fogFactor = 1.0 - exp2(-u_fogDensity * u_fogDensity * depth * depth * LOG2);
+            float finalFogFactor = mix(fogFactor, 1.0, u_fogAmount);
+    
+            gl_FragColor.rgb = mix(gl_FragColor.rgb, u_fogColor.rgb, finalFogFactor * depthInRange);
         }
+    }
     </script>
-
-    <script id="vertex-shadow-shader" type="x-shader/x-vertex">
-        precision highp float;
-        
-        layout (location = 0) in vec3 a_pos;
-        layout (location = 1) in mat4 a_modelMatrix;
-
-        uniform mat4 u_lightXform;
-        uniform mat4 u_lightProjection;
-
-        out vec3 FragPos;
-
-        void main()
-        {
-            FragPos = (a_modelMatrix * vec4(a_pos, 1.0)).xyz;
-            gl_Position = u_lightProjection * u_lightXform * a_modelMatrix * vec4(a_pos, 1.0);
-        }
-    </script>
-    <script id="fragment-shadow-shader" type="x-shader/x-fragment">
-        precision mediump float;
-
-        uniform highp mat4 u_lightXform;
-    
-        in vec3 FragPos;
-    
-        const float farPlane = ${lightFarPlane.toFixed(2)};
-    
-        void main() {
-            // get distance between fragment and light source
-            float lightDistance = length(FragPos - vec3(vec4(0.0, 0.0, -1.0, 1.0) * u_lightXform));
-    
-            // map to [0;1] range by dividing by far_plane
-            lightDistance = lightDistance / farPlane;
-    
-            // write this as modified depth
-            gl_FragDepth = lightDistance;
-        }
-    </script>
-
     <script type="text/javascript" src="Common/webgl-utils.js"></script>
     <script type="text/javascript" src="Common/initShaders.js"></script>
     <script type="text/javascript" src="Common/MV.js"></script>
@@ -245,7 +212,7 @@
             </div>
             <div class="option">
                 <p>Fog </p>
-                <input type="range" min="0.1" max="1" value="3" step=".01" id="fog"></input>
+                <input type="range" min="0.1" max="1" value="3" step=".001" id="u_fogAmount"></input>
             </div>
         </div>
         <!-- Maze Menu Texturen  -->

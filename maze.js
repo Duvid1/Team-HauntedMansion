@@ -13,9 +13,12 @@ var quad_loc;
 var skybox_loc;
 
 // Fog Shader
-var fogDensity_loc;
+var fogAmount_loc;
 var fogColor_loc;
-var fogDist_loc;
+var fogNear_loc;
+var fogFar_loc;
+var fogDensity_loc;
+
 
 // Menu Elements
 var menu;
@@ -147,30 +150,34 @@ function init() {
 
     // Setup Lichtvariablen
     diffuse_loc = gl.getUniformLocation(shader_program_0, "udiffuse");
-    gl.uniform1f(diffuse_loc, .5);
+    gl.uniform1f(diffuse_loc, .2);
     specular_loc = gl.getUniformLocation(shader_program_0, "uspecular");
     gl.uniform1f(specular_loc, .2);
     shine_loc = gl.getUniformLocation(shader_program_0, "ushine");
-    gl.uniform1f(shine_loc, 30)
+    gl.uniform1f(shine_loc, 10);
 
-    // Setup Fogvariablen
-    fogDensity_loc = gl.getUniformLocation(shader_program_0,"uFogDensity");
-    fogColor_loc = gl.getUniformLocation(shader_program_0, "fogColor");
-    fogDist_loc = gl.getUniformLocation(shader_program_0,"ufogDist");
+    // Setup Fog
+    fogAmount_loc = gl.getUniformLocation(shader_program_0, "u_fogAmount");
+    fogColor_loc = gl.getUniformLocation(shader_program_0, "u_fogColor");
+    fogNear_loc = gl.getUniformLocation(shader_program_0,"u_fogNear");
+    fogFar_loc = gl.getUniformLocation(shader_program_0,"u_fogFar");
+    fogDensity_loc = gl.getUniformLocation(shader_program_0, "u_fogDensity");
 
-    var fogColor = [1.0, 1.0, 1.0, 1.0];
-    var fogDensity = 0.7; // Je höher desto dunkler wird die Szene
-    var fogStartDistance = 10.0;
-    var fogEndDistance = 120.0;
-
-    var fogDist = new Float32Array([fogStartDistance, fogEndDistance]);
-    gl.uniform1f(fogDensity_loc, fogDensity);
+    var fogColor = [0.8, 0.9, 1, 1]; // Farbe vom Nebel
+    var settings = {
+        fogAmount: .1, 
+        fogNear: .2, // FogNear+ Far ist ab wann man den Nebel sieht bzw. nicht mehr sieht
+        fogFar: 1.7,
+        fogDensity: 1.0, // Hier Wert nieriger machen für weniger Nebel
+    };
     gl.uniform4fv(fogColor_loc, fogColor);
-    gl.uniform2fv(fogDist_loc, fogDist);
+    gl.uniform1f(fogNear_loc, settings.fogNear);
+    gl.uniform1f(fogFar_loc, settings.fogFar);
+    gl.uniform1f(fogAmount_loc, settings.fogAmount);
+    gl.uniform1f(fogDensity_loc,settings.fogDensity);
     
     // TODO: Schatten (?) 
     
-
     // Setup Wände
     walls_vertices = [];
     walls_text_coords = [];
@@ -365,8 +372,8 @@ function init() {
     document.getElementById("shine").oninput = function () {
         gl.uniform1f(shine_loc, this.value);
     };
-    document.getElementById("fog").oninput = function () {
-        gl.uniform1f(shine_loc, this.value);
+    document.getElementById("u_fogAmount").oninput = function () {
+        gl.uniform1f(fogAmount_loc, this.value);
     };
     document.getElementById("cell_size").oninput = function () {
         maze_cell_size = this.value;
@@ -925,6 +932,7 @@ function animate() {
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.useProgram(shader_program_0);
     requestAnimationFrame(animate);
+
 }
 
 function mouse_rotate(e) {

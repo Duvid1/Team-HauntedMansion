@@ -18,6 +18,7 @@ var fogColor_loc;
 var fogNear_loc;
 var fogFar_loc;
 var fogDensity_loc;
+var fogDensityPlat_loc;
 
 
 // Menu Elements
@@ -162,21 +163,21 @@ function init() {
     fogNear_loc = gl.getUniformLocation(shader_program_0,"u_fogNear");
     fogFar_loc = gl.getUniformLocation(shader_program_0,"u_fogFar");
     fogDensity_loc = gl.getUniformLocation(shader_program_0, "u_fogDensity");
-
+    fogDensityPlat_loc = gl.getUniformLocation(shader_program_0,"u_fogDensityPlatform");
     var fogColor = [0.8, 0.9, 1, 1]; // Farbe vom Nebel
     var settings = {
         fogAmount: .1, 
         fogNear: .2, // FogNear+ Far ist ab wann man den Nebel sieht bzw. nicht mehr sieht
         fogFar: 1.7,
         fogDensity: 1.0, // Hier Wert nieriger machen für weniger Nebel
+        fogDensityPlat: 0.5,
     };
     gl.uniform4fv(fogColor_loc, fogColor);
     gl.uniform1f(fogNear_loc, settings.fogNear);
     gl.uniform1f(fogFar_loc, settings.fogFar);
     gl.uniform1f(fogAmount_loc, settings.fogAmount);
-    gl.uniform1f(fogDensity_loc,settings.fogDensity);
-    
-    // TODO: Schatten (?) 
+    gl.uniform1f(fogDensity_loc, settings.fogDensity);
+    gl.uniform1f(fogDensityPlat_loc, settings.fogDensityPlat);
     
     // Setup Wände
     walls_vertices = [];
@@ -202,7 +203,6 @@ function init() {
     textcoord_loc = gl.getAttribLocation(shader_program_0, "atextcoord");
     gl.vertexAttribPointer(textcoord_loc, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(textcoord_loc);   
-
     // Setup Matrix
     alpha = 0;
     beta = -90;
@@ -372,9 +372,7 @@ function init() {
     document.getElementById("shine").oninput = function () {
         gl.uniform1f(shine_loc, this.value);
     };
-    document.getElementById("u_fogAmount").oninput = function () {
-        gl.uniform1f(fogAmount_loc, this.value);
-    };
+   
     document.getElementById("cell_size").oninput = function () {
         maze_cell_size = this.value;
         if (maze_built) {
@@ -444,6 +442,8 @@ function init() {
                 gl.generateMipmap(gl.TEXTURE_2D);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.useProgram(shader_program_0);
+
             });
         } else {
             gl.activeTexture(gl.TEXTURE0);
@@ -452,7 +452,7 @@ function init() {
             gl.generateMipmap(gl.TEXTURE_2D);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-
+            
         }
     };
     document.getElementById("wall_texture").oninput = function () {
@@ -467,7 +467,6 @@ function init() {
                 gl.generateMipmap(gl.TEXTURE_2D);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
             });
         } else {
             gl.activeTexture(gl.TEXTURE1);

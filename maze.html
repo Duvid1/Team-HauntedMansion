@@ -154,6 +154,7 @@
         uniform float u_fogFar;
         uniform float u_fogAmount;
         uniform float u_fogDensity;
+        uniform float u_fogDensityPlatform;
 
 
         void main(){
@@ -170,7 +171,6 @@
             gl_FragColor.rgb+= uspecular*specular_light;
             
             // Fog Settings
-
             float depth = length(vsurfaceToView);
             float depthInRange = clamp((depth - u_fogNear) / (u_fogFar - u_fogNear), 0.0, 1.0);
             #define LOG2 1.442695
@@ -178,8 +178,21 @@
             float fogFactor = 1.0 - exp2(-u_fogDensity * u_fogDensity * depth * depth * LOG2);
             float finalFogFactor = mix(fogFactor, 1.0, u_fogAmount);
     
-            gl_FragColor.rgb = mix(gl_FragColor.rgb, u_fogColor.rgb, finalFogFactor * depthInRange);
+            gl_FragColor.rgb = mix(gl_FragColor.rgb, u_fogColor.rgb * 0.8 , finalFogFactor * depthInRange);
         }
+
+        // Für Platform damit dieser auch vom Fog beeinflusst wird
+        if(wall_flag == 0){
+            float depth = length(vsurfaceToView);
+            float depthInRange = clamp((depth - u_fogNear) / (u_fogFar - u_fogNear), 0.0, 1.0);
+            #define LOG2 1.442695
+
+            float fogFactor = 1.0 - exp2(-u_fogDensityPlatform * u_fogDensity * depth * depth * LOG2);
+            float finalFogFactor = mix(fogFactor, 1.0, u_fogAmount);
+    
+            gl_FragColor.rgb = mix(gl_FragColor.rgb, u_fogColor.rgb * 0.4, finalFogFactor * depthInRange);
+        }
+        
     }
     </script>
     <script type="text/javascript" src="Common/webgl-utils.js"></script>
@@ -209,10 +222,6 @@
             <div class="option">
                 <p>Shine</p>
                 <input type="range" min="10" max="500" value="30" id="shine"></input>
-            </div>
-            <div class="option">
-                <p>Fog </p>
-                <input type="range" min="0.1" max="1" value="3" step=".001" id="u_fogAmount"></input>
             </div>
         </div>
         <!-- Maze Menu Texturen  -->

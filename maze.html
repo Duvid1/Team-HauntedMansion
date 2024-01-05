@@ -132,6 +132,7 @@
     vtextcoord = atextcoord;
     vnormal = anormal;
     vsurfaceToView = camera_pos - aposition.xyz;
+
     v_fogDepth = -(u_worldView*aposition).z;
     }
 
@@ -156,6 +157,8 @@
         uniform float u_fogDensity;
         uniform float u_fogDensityPlatform;
 
+        // Flashlight
+        uniform vec2 u_cursor;
 
         void main(){
             vec3 normal = normalize(vnormal);
@@ -169,7 +172,7 @@
             vec3 halfVector = normalize(ureverse_light_dir + surfaceToView);
             float specular_light = pow(max(dot(normal, halfVector),0.0),ushine);
             gl_FragColor.rgb+= uspecular*specular_light;
-            
+        
             // Fog Settings
             float depth = length(vsurfaceToView);
             float depthInRange = clamp((depth - u_fogNear) / (u_fogFar - u_fogNear), 0.0, 1.0);
@@ -179,6 +182,15 @@
             float finalFogFactor = mix(fogFactor, 1.0, u_fogAmount);
     
             gl_FragColor.rgb = mix(gl_FragColor.rgb, u_fogColor.rgb * 0.8 , finalFogFactor * depthInRange);
+
+            // Flashlight Settings
+            
+            vec4 fragCoord = vec4(gl_FragCoord.xy / vec2(512.0, 512.0) * 2.0 - 1.0, 0.0, 1.0);
+            vec3 flashlightDirection = normalize(vec3(u_cursor, 1.0) - fragCoord.xyz);
+            float dist = 0.24 / length(flashlightDirection);
+            gl_FragColor.rgb += vec3(1.0, 1.0, 1.0) * min(1.0, max(dist, 0.0));  // Adjust color and intensity
+            
+
         }
 
         // Für Platform damit dieser auch vom Fog beeinflusst wird

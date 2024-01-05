@@ -20,6 +20,8 @@ var fogFar_loc;
 var fogDensity_loc;
 var fogDensityPlat_loc;
 
+// Flashlight
+var cursorUniform_loc;
 
 // Menu Elements
 var menu;
@@ -169,7 +171,7 @@ function init() {
         fogAmount: .1, 
         fogNear: .2, // FogNear+ Far ist ab wann man den Nebel sieht bzw. nicht mehr sieht
         fogFar: 1.7,
-        fogDensity: 1.0, // Hier Wert nieriger machen für weniger Nebel
+        fogDensity: .1, // Hier Wert nieriger machen für weniger Nebel
         fogDensityPlat: 0.5,
     };
     gl.uniform4fv(fogColor_loc, fogColor);
@@ -178,7 +180,19 @@ function init() {
     gl.uniform1f(fogAmount_loc, settings.fogAmount);
     gl.uniform1f(fogDensity_loc, settings.fogDensity);
     gl.uniform1f(fogDensityPlat_loc, settings.fogDensityPlat);
+
+    // Setup Flashlight;
+    cursorUniform_loc = gl.getUniformLocation(shader_program_0, "u_cursor");
+    const cursor = [0, 0]
+    canvas.addEventListener('mousemove', (event) =>
+    {
+        cursor[0] = (event.offsetX / canvas.width) * 2 - 1;
+        cursor[1] = (event.offsetY / canvas.height) * -2 + 1;
+        gl.useProgram(shader_program_0);  // Assuming shader_program_0 is your active shader program
+        gl.uniform2fv(cursorUniform, cursor);
+    });
     
+
     // Setup Wände
     walls_vertices = [];
     walls_text_coords = [];
@@ -932,6 +946,7 @@ function animate() {
     gl.useProgram(shader_program_0);
     requestAnimationFrame(animate);
 
+    gl.uniform2f(cursorUniform, cursor[0], cursor[1]);
 }
 
 function mouse_rotate(e) {
